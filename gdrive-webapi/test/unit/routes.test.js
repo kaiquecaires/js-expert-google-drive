@@ -2,6 +2,21 @@ import { describe, test, expect, jest } from '@jest/globals'
 import Routes from '../../src/routes'
 
 describe('#Routes test suit', () => {
+  const defaultParams = {
+    request: {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      method: ''
+    },
+    response: {
+      setHeader: jest.fn(),
+      writeHead: jest.fn(),
+      end: jest.fn()
+    },
+    values: () => Object.values(defaultParams)
+  }
+
   describe('#setSocketInstance', () => {
     test('setSocket should store io instance', () => {
       const routes = new Routes()
@@ -16,21 +31,6 @@ describe('#Routes test suit', () => {
   })
 
   describe('#handler', () => {
-    const defaultParams = {
-      request: {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        method: ''
-      },
-      response: {
-        setHeader: jest.fn(),
-        writeHead: jest.fn(),
-        end: jest.fn()
-      },
-      values: () => Object.values(defaultParams)
-    }
-
     test('give an inexistent route it should choose default route', async () => {
       const routes = new Routes()
       const params = {
@@ -85,16 +85,24 @@ describe('#Routes test suit', () => {
   })
 
   describe('#get', () => {
-    test.skip('given method GET it should list all files downloaded', () => {
+    test('given method GET it should list all files downloaded', async () => {
+      const routes = new Routes()
+      const params = {
+        ...defaultParams
+      }
       const filesStatusesMock = [
         {
-          size: 3093394,
-          blocks: 6048,
+          size: '3.09 MB',
           birthtime: '2021-09-06T17:53:03.138Z',
           owner: 'kaiquecaires',
           file: 'file.png'
         }
       ]
+      jest.spyOn(routes.fileHelper, routes.fileHelper.getFileStatus.name).mockResolvedValue(filesStatusesMock)
+      params.request.method = 'GET'
+      await routes.handler(...params.values())
+      expect(params.response.writeHead).toBeCalledWith(200)
+      expect(params.response.end).toBeCalledWith(JSON.stringify(filesStatusesMock))
     })
   })
 })
