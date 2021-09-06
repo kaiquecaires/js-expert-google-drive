@@ -17,6 +17,7 @@ class Routes {
 
   async options (request, response) {
     response.writeHead(204)
+    response.end()
   }
 
   async post (request, response) {

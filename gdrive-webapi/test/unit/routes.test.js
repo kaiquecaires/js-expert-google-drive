@@ -49,9 +49,19 @@ describe('#Routes test suid', () => {
         expect(params.response.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Orgin', '*')
       })
 
-      test.todo('given method OPTIONS it should choose options route')
+      test('given method OPTIONS it should choose options route', async () => {
+        const routes = new Routes()
+        const params = {
+          ...defaultParams
+        }
+        params.request.method = 'OPTIONS'
+        await routes.handler(...params.values())
+        expect(params.response.writeHead).toHaveBeenCalledWith(204)
+        expect(params.response.end).toHaveBeenCalled()
+      })
+
       test.todo('given method POST it should choose post route')
       test.todo('given method GET it should choose get route')
-    });
+    })
   })
 })
