@@ -83,4 +83,18 @@ describe('#Routes test suit', () => {
       expect(routes.get).toHaveBeenCalled()
     })
   })
+
+  describe('#get', () => {
+    test.skip('given method GET it should list all files downloaded', () => {
+      const filesStatusesMock = [
+        {
+          size: 3093394,
+          blocks: 6048,
+          birthtime: '2021-09-06T17:53:03.138Z',
+          owner: 'kaiquecaires',
+          file: 'file.png'
+        }
+      ]
+    })
+  })
 })
