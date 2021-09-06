@@ -40,7 +40,15 @@ describe('#Routes test suid', () => {
         expect(params.response.end).toHaveBeenCalledWith('hello world')
       })
 
-      test.todo('it should set any request with CORS enabled')
+      test('it should set any request with CORS enabled', async () => {
+        const routes = new Routes()
+        const params = {
+          ...defaultParams
+        }
+        await routes.handler(...params.values())
+        expect(params.response.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Orgin', '*')
+      })
+
       test.todo('given method OPTIONS it should choose options route')
       test.todo('given method POST it should choose post route')
       test.todo('given method GET it should choose get route')
