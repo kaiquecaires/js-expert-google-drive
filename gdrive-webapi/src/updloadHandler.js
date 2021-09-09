@@ -7,10 +7,31 @@ class UpdloadHandler {
     this.io = io
     this.socketId = socketId
     this.downloadsFolder = downloadsFolder
+    this.ON_UPLOAD_EVENT = 'file-upload'
   }
 
-  handleFileBytes () {
+  canExecute (lastExecution) {
 
+  }
+
+  handleFileBytes (filename) {
+    this.lastMessageSent = Date.now()
+
+    async function* handleData(source) {
+      let processedAlready = 0
+
+      for await(const chunk of source) {
+        yield chunk
+        processedAlready += chunk.length
+        if (!this.canExecute(this.lastMessageSent)) {
+          continue;
+        }
+        this.io.to(this.socketId).emit(this.ON_UPLOAD_EVENT, { processedAlready, filename })
+        logger.info(`File [${filename}] got ${processedAlready} bytes to ${this.socketId}`)
+      }
+    }
+
+    return handleData.bind(this)
   }
 
   async onFile (fieldName, file, fileName) {

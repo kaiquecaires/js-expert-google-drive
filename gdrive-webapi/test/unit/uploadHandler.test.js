@@ -1,14 +1,21 @@
-import { describe, test, jest, expect } from '@jest/globals'
+import { describe, test, jest, expect, beforeEach } from '@jest/globals'
 import fs from 'fs'
+import { pipeline } from 'stream/promises'
 import { resolve } from 'path'
-import UpdloadHandler from '../../src/updloadHandler'
-import TestUtil from '../_util/testUtil'
+import UpdloadHandler from '../../src/updloadHandler.js'
+import TestUtil from '../_util/testUtil.js'
+import { logger } from '../../src/logger.js'
 
 describe('#UpdloadHandler test suite', () => {
   const ioObj = {
     to: (id) => ioObj,
     emit: (event, message) => {}
   }
+
+  beforeEach(() => {
+    jest.spyOn(logger, 'info')
+    .mockImplementation()
+  })
   
   describe('#registerEvents', () => {
     test('should call onfile and onFinish functions on Busboy instance', () => {
@@ -65,6 +72,41 @@ describe('#UpdloadHandler test suite', () => {
 
       const expectedFileName = resolve(handler.downloadsFolder, params.fileName)
       expect(fs.createWriteStream).toHaveBeenCalledWith(expectedFileName)
+    })
+  })
+
+  describe('#handleFileBytes', () => {
+    test('should call emit function and it is a transform stream', async () => {
+      jest.spyOn(ioObj, ioObj.to.name)
+      jest.spyOn(ioObj, ioObj.emit.name)
+
+      const handler = new UpdloadHandler({
+        io: ioObj,
+        socketId: '01'
+      })
+
+      jest.spyOn(handler, handler.canExecute.name)
+        .mockReturnValue(true)
+
+      const messages = ['hello']
+      const source = TestUtil.generateReadableStream(messages)
+      const onWrite = jest.fn()
+      const target = TestUtil.generateWritableStream(onWrite)
+      await pipeline(
+          source,
+          handler.handleFileBytes('filename.txt'),
+          target
+      )
+
+      expect(ioObj.to).toHaveBeenCalledTimes(messages.length)
+      expect(ioObj.emit).toHaveBeenCalledTimes(messages.length)
+
+      // if the handleFileBytes is a transform stream, 
+      // our pipeline will be continue the proccess
+      // send the data and call our function target every chunk
+
+      expect(onWrite).toBeCalledTimes(messages.length)
+      expect(onWrite.mock.calls.join()).toEqual(messages.join())
     })
   })
 })
