@@ -12,7 +12,7 @@ class UpdloadHandler {
   }
 
   canExecute (lastExecution) {
-    return (Date.now() - lastExecution) > this.messageTimeDelay
+    return (Date.now() - lastExecution) >= this.messageTimeDelay
   }
 
   handleFileBytes (filename) {
@@ -27,6 +27,8 @@ class UpdloadHandler {
         if (!this.canExecute(this.lastMessageSent)) {
           continue;
         }
+
+        this.lastMessageSent = Date.now()
         this.io.to(this.socketId).emit(this.ON_UPLOAD_EVENT, { processedAlready, filename })
         logger.info(`File [${filename}] got ${processedAlready} bytes to ${this.socketId}`)
       }

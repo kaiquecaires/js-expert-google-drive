@@ -108,6 +108,51 @@ describe('#UpdloadHandler test suite', () => {
       expect(onWrite).toBeCalledTimes(messages.length)
       expect(onWrite.mock.calls.join()).toEqual(messages.join())
     })
+
+    test('given message timerDelay as 2 secs it should emit only two messages during 2 seconds period', async () => {
+      jest.spyOn(ioObj, ioObj.emit.name)
+      const messageTimeDelay = 2000
+
+      const day = '2021-07-01'
+      const onFirstLastMessageSent = TestUtil.getTimeFromDate(`${day} 01:01:00`)
+      const onFirstCanExecute = TestUtil.getTimeFromDate(`${day} 01:01:02`)
+      const onSecondUpdateLastMessageSent = onFirstCanExecute
+      const onSecondCanExecute = TestUtil.getTimeFromDate(`${day} 01:01:03`)
+      const onThirdCanExecute = TestUtil.getTimeFromDate(`${day} 01:01:04`)
+
+      TestUtil.mockDateNow([
+        onFirstLastMessageSent,
+        onFirstCanExecute,
+        onSecondUpdateLastMessageSent,
+        onSecondCanExecute,
+        onThirdCanExecute
+      ])
+
+      const handler = new UpdloadHandler({
+        io: ioObj,
+        socketId: '01',
+        messageTimeDelay: messageTimeDelay
+      })
+
+      const messages = ['hello', 'hello', 'world']
+      const expectedMessageSent = 2
+
+      const source = TestUtil.generateReadableStream(messages)
+
+      const filename = 'filename.avi'
+
+      await pipeline(
+        source,
+        handler.handleFileBytes(filename)
+      )
+
+      expect(ioObj.emit).toHaveBeenCalledTimes(expectedMessageSent)
+
+      const [fisrtCallResult, secondCallResult] = ioObj.emit.mock.calls
+
+      expect(fisrtCallResult).toEqual([handler.ON_UPLOAD_EVENT, { processedAlready: 'hello'.length, filename }])
+      expect(secondCallResult).toEqual([handler.ON_UPLOAD_EVENT, { processedAlready: messages.join('').length, filename }])
+    })
   })
 
   describe('#canExecute', () => {
